@@ -1,0 +1,104 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import supabase from "../../utils/supabase/client";
+import Link from "next/link";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const isSupabaseConfigured =
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL !== "your_supabase_project_url_here";
+
+  async function handleLogin(e) {
+  e.preventDefault();
+  setError("");
+
+  if (!isSupabaseConfigured) {
+    alert("Demo login successful!");
+    router.push("/chat");
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    setError(error.message);
+  } else {
+    const { user } = data;
+
+    if (!user.email_confirmed_at) {
+      setError("Please verify your email before logging in.");
+      await supabase.auth.signOut();
+      return;
+    }
+
+    router.push("/chat");
+  }
+}
+
+
+  return (
+    <div className="max-w-md mx-auto mt-10 space-y-4">
+      <h2 className="text-2xl font-bold">Login</h2>
+
+      {!isSupabaseConfigured && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <p className="text-yellow-800 text-sm">
+            <strong>Demo Mode:</strong> Any email/password will work for testing.
+          </p>
+        </div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-3">
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border p-2 rounded"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full border p-2 rounded"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <button
+          type="submit"
+          className="w-full bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition"
+        >
+          {isSupabaseConfigured ? "Log In" : "Demo Login"}
+        </button>
+      </form>
+
+      <Link
+  href="/reset-password-request"
+  className="inline-block w-full text-center bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition"
+>
+  Forgot your password?
+</Link>
+
+
+
+      <Link
+        href="/signup"
+        className="inline-block w-full text-center bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition"
+      >
+        Sign Up
+      </Link>
+    </div>
+  );
+}
