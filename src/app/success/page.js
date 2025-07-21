@@ -62,7 +62,8 @@ export default function SuccessPage() {
           <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
             <p className="text-sm">
               🎭 <strong>Demo Mode:</strong> This is a simulated payment. In production, 
-              you would be redirected to Stripe's checkout page.
+              you would be redirected to Stripe&rsquo;s checkout page.
+
             </p>
           </div>
         )}
