@@ -1,4 +1,3 @@
-// app/ebooks/[slug]/page.js
 import supabase from "../../../utils/supabase/client";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -7,6 +6,32 @@ import Link from "next/link";
 
 export default async function EbookPage({ params }) {
   const { slug } = params;
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user?.email) {
+    return <div>⚠️ You must be logged in to view this ebook.</div>;
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("has_active_subscription")
+    .eq("email", session.user.email)
+    .single();
+
+  if (profileError || !profile?.has_active_subscription) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold text-red-600">🔒 Access Denied</h2>
+        <p className="text-gray-700 mt-2">You need an active subscription to view this eBook.</p>
+        <Link href="/pricing" className="text-blue-600 underline mt-4 inline-block">
+          Subscribe Now
+        </Link>
+      </div>
+    );
+  }
 
   const { data, error } = await supabase
     .from("ebooks")
