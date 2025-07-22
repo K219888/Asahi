@@ -11,26 +11,51 @@ export default function EbooksPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function loadData() {
-      console.log("Loading ebooks...");
+  async function loadData() {
+    console.log("Checking subscription...");
 
-      const { data, error } = await supabase
-        .from("ebooks")
-        .select("*");
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
 
-      if (error) {
-        console.error("Supabase error:", error);
-        setError("Failed to load e-books.");
-      } else {
-        console.log("Ebooks loaded:", data);
-        setEbooks(data || []);
-      }
-
+    if (userError || !user) {
+      console.error("User not found:", userError);
+      setError("You must be logged in.");
       setLoading(false);
+      return;
     }
 
-    loadData();
-  }, []);
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("has_active_subscription")
+      .eq("email", user.email)
+      .single();
+
+    if (profileError || !profile?.has_active_subscription) {
+      console.warn("No active subscription found.");
+      setError("You need an active subscription to access e-books.");
+      setLoading(false);
+      return;
+    }
+
+    const { data: ebooksData, error: ebooksError } = await supabase
+      .from("ebooks")
+      .select("*");
+
+    if (ebooksError) {
+      console.error("Failed to load e-books:", ebooksError);
+      setError("Failed to load e-books.");
+    } else {
+      setEbooks(ebooksData || []);
+    }
+
+    setLoading(false);
+  }
+
+  loadData();
+}, []);
+
 
   if (loading) {
     return (
