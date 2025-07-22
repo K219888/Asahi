@@ -1,0 +1,48 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+export default function SuccessClient() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session_id');
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [demo, setDemo] = useState(false);
+
+  useEffect(() => {
+    if (!sessionId || sessionId === 'demo') {
+      setDemo(true);
+      setLoading(false);
+      return;
+    }
+
+    // You can fetch verification status here if needed
+    fetch(`/api/checkout-session?session_id=${sessionId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setLoading(false);
+        } else {
+          setError(true);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
+  }, [sessionId]);
+
+  if (loading) return <p className="text-center">Verifying your purchase...</p>;
+  if (error) return <p className="text-center text-red-600">Error verifying session.</p>;
+  if (demo) return <p className="text-center">Demo mode: No payment needed.</p>;
+
+  return (
+    <div className="text-center text-green-600">
+      <h1 className="text-2xl font-bold">Payment Successful!</h1>
+      <p>You now have full access to the eBooks.</p>
+    </div>
+  );
+}

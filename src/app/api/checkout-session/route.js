@@ -13,9 +13,12 @@ export async function GET(req) {
   }
 
   try {
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-    return NextResponse.json({ session });
-  } catch (err) {
-    return NextResponse.json({ error: 'Failed to retrieve session' }, { status: 500 });
-  }
+  const session = await stripe.checkout.sessions.retrieve(session_id);
+
+  // Optional: You could also check session.payment_status === 'paid'
+  return NextResponse.json({ success: true });
+} catch (err) {
+  return NextResponse.json({ error: 'Failed to retrieve session' }, { status: 500 });
+}
+
 }
