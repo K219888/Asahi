@@ -1,10 +1,14 @@
-import supabase from "../../../utils/supabase/client";
+'use client';
+
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import Link from "next/link";
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export default async function EbookPage({ params }) {
+  const supabase = createServerComponentClient({ cookies });
   const { slug } = params;
 
   const {
