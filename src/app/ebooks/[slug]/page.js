@@ -1,7 +1,11 @@
 import { cookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
-import MarkdownViewer from "./MarkdownViewer"; // New client component
+import MarkdownViewer from "../../components/MarkdownViewer";
+
+
+
+
 
 export default async function EbookPage({ params }) {
   const supabase = createServerComponentClient({ cookies });
@@ -54,7 +58,7 @@ export default async function EbookPage({ params }) {
         ← Back to eBooks
       </Link>
 
-      <MarkdownViewer title={data.title} content={data.content} />
+     <MarkdownViewer title={data.title} content={data.content} />
     </main>
   );
 }
