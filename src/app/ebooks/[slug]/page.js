@@ -1,11 +1,7 @@
-'use client';
-
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
+import { cookies } from "next/headers";
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import MarkdownViewer from "./MarkdownViewer"; // New client component
 
 export default async function EbookPage({ params }) {
   const supabase = createServerComponentClient({ cookies });
@@ -29,7 +25,9 @@ export default async function EbookPage({ params }) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold text-red-600">🔒 Access Denied</h2>
-        <p className="text-gray-700 mt-2">You need an active subscription to view this eBook.</p>
+        <p className="text-gray-700 mt-2">
+          You need an active subscription to view this eBook.
+        </p>
         <Link href="/pricing" className="text-blue-600 underline mt-4 inline-block">
           Subscribe Now
         </Link>
@@ -43,13 +41,8 @@ export default async function EbookPage({ params }) {
     .eq("slug", slug)
     .single();
 
-  if (error) {
-    console.error("Supabase error:", error.message);
-    return <div>⚠️ Error loading ebook: {error.message}</div>;
-  }
-
-  if (!data) {
-    return <div>📕 No ebook found.</div>;
+  if (error || !data) {
+    return <div>⚠️ Error loading ebook: {error?.message || "Not found"}</div>;
   }
 
   return (
@@ -61,10 +54,7 @@ export default async function EbookPage({ params }) {
         ← Back to eBooks
       </Link>
 
-      <h1>{data.title}</h1>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
-        {data.content}
-      </ReactMarkdown>
+      <MarkdownViewer title={data.title} content={data.content} />
     </main>
   );
 }
