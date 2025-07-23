@@ -4,26 +4,14 @@ import Link from "next/link";
 import MarkdownViewer from "../../components/MarkdownViewer";
 
 export default async function EbookPage({ params }) {
-  const supabase = createServerComponentClient({ cookies });
-  const { slug } = params;
+  const supabase = createServerComponentClient({ cookies: cookies() }); // ✅ FIXED
+  const { slug } = params || {};
+
+  if (!slug) return <div>Missing ebook slug.</div>;
 
   const {
     data: { session },
   } = await supabase.auth.getSession();
-
-  // DEBUG: show session info
-  // (Remove or comment out after debugging)
-  if (!session) {
-    return (
-      <div>
-        <h1>Session Debug</h1>
-        <p>No active session found on server.</p>
-        <p>Cookies sent:</p>
-        <pre>{JSON.stringify([...cookies().entries()], null, 2)}</pre>
-        <p>Please login first and check cookies.</p>
-      </div>
-    );
-  }
 
   if (!session?.user?.email) {
     return <div>⚠️ You must be logged in to view this ebook.</div>;
