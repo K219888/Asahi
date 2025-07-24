@@ -1,15 +1,14 @@
-import { cookies as nextCookies } from "next/headers";
+import { cookies } from "next/headers"; // ✅ correct import
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
 import MarkdownViewer from "../../components/MarkdownViewer";
 
 export default async function EbookPage({ params }) {
-  const supabase = createServerComponentClient({ cookies: nextCookies() });
+  const supabase = createServerComponentClient({ cookies }); // ✅ cookies is a function
   const { slug } = params || {};
 
   if (!slug) return <div>Missing ebook slug.</div>;
 
-  // 🔥 Use getUser instead of getSession
   const {
     data: { user },
     error: userError,
