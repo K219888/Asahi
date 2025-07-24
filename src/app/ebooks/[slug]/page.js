@@ -21,7 +21,7 @@ export default async function EbookPage({ params }) {
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("has_active_subscription")
-    .eq("email", user.email)
+    .eq("id", user.id)
     .single();
 
   if (profileError || !profile?.has_active_subscription) {
