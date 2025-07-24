@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import supabase from "../../utils/supabase/client";
 
-
 export default function AuthGuard({ children }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -14,31 +13,26 @@ export default function AuthGuard({ children }) {
     let isMounted = true;
 
     supabase.auth.getSession().then(({ data, error }) => {
-      if (error) {
-        console.error(error);
-        if (isMounted) {
+      if (isMounted) {
+        if (error) {
+          console.error(error);
           setSession(null);
-          setLoading(false);
-        }
-      } else {
-        if (isMounted) {
+        } else {
           setSession(data.session);
-          setLoading(false);
         }
+        setLoading(false);
       }
     });
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        if (isMounted) {
-          setSession(newSession);
-        }
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (isMounted) {
+        setSession(newSession);
       }
-    );
+    });
 
     return () => {
       isMounted = false;
-      listener?.subscription?.unsubscribe();
+      listener?.subscription?.unsubscribe(); // ✅ cleanup on unmount
     };
   }, []);
 
