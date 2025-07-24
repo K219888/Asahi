@@ -8,46 +8,61 @@ export default function AuthGuard({ children }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState(null);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (isMounted) {
-        if (error) {
-          console.error(error);
-          setSession(null);
-        } else {
-          setSession(data.session);
+    const load = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+
+      if (error || !session) {
+        if (isMounted) {
+          router.replace("/login");
         }
+        return;
+      }
+
+      if (isMounted) setSession(session);
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("has_active_subscription")
+        .eq("id", session.user.id)
+        .single();
+
+      if (profileError || !profile?.has_active_subscription) {
+        if (isMounted) {
+          router.replace("/subscribe");
+        }
+        return;
+      }
+
+      if (isMounted) {
+        setHasAccess(true);
         setLoading(false);
       }
-    });
+    };
+
+    load();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      if (isMounted) {
-        setSession(newSession);
-      }
+      if (isMounted) setSession(newSession);
     });
 
     return () => {
       isMounted = false;
-      listener?.subscription?.unsubscribe(); // ✅ cleanup on unmount
+      listener?.subscription?.unsubscribe();
     };
   }, []);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-500 text-lg">Loading...</p>
+        <p className="text-gray-500 text-lg">Checking access...</p>
       </div>
     );
   }
 
-  if (!session) {
-    router.replace("/login");
-    return null;
-  }
-
-  return children;
+  return hasAccess ? children : null;
 }
