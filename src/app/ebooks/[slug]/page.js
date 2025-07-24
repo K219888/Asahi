@@ -4,7 +4,7 @@ import Link from "next/link";
 import MarkdownViewer from "../../components/MarkdownViewer";
 
 export default async function EbookPage({ params }) {
-  const supabase = createServerComponentClient({ cookies: cookies() }); // ✅ FIXED
+  const supabase = createServerComponentClient({ cookies }); // ✅ FIXED HERE
   const { slug } = params || {};
 
   if (!slug) return <div>Missing ebook slug.</div>;
