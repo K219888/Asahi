@@ -1,10 +1,10 @@
-import { cookies } from "next/headers";
+import { cookies as nextCookies } from "next/headers";
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
 import Link from "next/link";
 import MarkdownViewer from "../../components/MarkdownViewer";
 
 export default async function EbookPage({ params }) {
-  const supabase = createServerComponentClient({ cookies });
+  const supabase = createServerComponentClient({ cookies: nextCookies() });
   const { slug } = params || {};
 
   if (!slug) return <div>Missing ebook slug.</div>;
