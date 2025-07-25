@@ -1,63 +1,58 @@
-import { cookies } from "next/headers"; // ✅ correct import
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import Link from "next/link";
-import MarkdownViewer from "../../components/MarkdownViewer";
+// app/ebooks/[slug]/page.tsx
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
-export default async function EbookPage({ params }) {
-  const supabase = createServerComponentClient({ cookies }); // ✅ cookies is a function
-  const { slug } = params || {};
-
-  if (!slug) return <div>Missing ebook slug.</div>;
-
+export default async function EbookPage({ params }: { params: { slug: string } }) {
+  const supabase = createServerComponentClient({ cookies: () => cookies() });
   const {
     data: { user },
-    error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError || !user?.email) {
-    return <div>⚠️ You must be logged in to view this ebook.</div>;
+  if (!user) {
+    return redirect('/login');
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("has_active_subscription")
-    .eq("id", user.id)
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('has_active_subscription')
+    .eq('id', user.id)
     .single();
 
-  if (profileError || !profile?.has_active_subscription) {
+  if (!profile?.has_active_subscription) {
+    return redirect('/pricing');
+  }
+
+  const { slug } = params;
+
+  const { data: ebook, error } = await supabase
+    .from('ebooks')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error || !ebook) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-red-600">🔒 Access Denied</h2>
-        <p className="text-gray-700 mt-2">
-          You need an active subscription to view this eBook.
-        </p>
-        <Link href="/pricing" className="text-blue-600 underline mt-4 inline-block">
-          Subscribe Now
+      <div className="p-6">
+        <h1 className="text-2xl font-bold">E-Book Not Found</h1>
+        <Link href="/ebooks" className="text-blue-500 underline mt-4 block">
+          ← Back to E-Books
         </Link>
       </div>
     );
   }
 
-  const { data, error } = await supabase
-    .from("ebooks")
-    .select("title, content")
-    .eq("slug", slug)
-    .single();
-
-  if (error || !data) {
-    return <div>⚠️ Error loading ebook: {error?.message || "Not found"}</div>;
-  }
-
   return (
-    <main className="prose prose-base lg:prose-lg max-w-3xl mx-auto px-6 py-12 space-y-6">
-      <Link
-        href="/ebooks"
-        className="inline-block text-sm text-white bg-blue-600 px-4 py-2 rounded hover:bg-blue-700 transition"
-      >
-        ← Back to eBooks
+    <div className="p-6">
+      <Link href="/ebooks" className="text-blue-500 underline">
+        ← Back to E-Books
       </Link>
-
-      <MarkdownViewer title={data.title} content={data.content} />
-    </main>
+      <h1 className="text-3xl font-bold mt-4">{ebook.title}</h1>
+      <p className="text-gray-600 italic mb-6">by {ebook.author}</p>
+      <div className="prose max-w-none">
+        <p>{ebook.content}</p>
+      </div>
+    </div>
   );
 }
