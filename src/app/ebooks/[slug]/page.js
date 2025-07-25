@@ -1,25 +1,20 @@
-// app/ebooks/[slug]/page.tsx
+// app/ebooks/[slug]/page.js
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-export const dynamic = 'force-dynamic'; // ✅ required for SSR + Supabase
+export const dynamic = 'force-dynamic';
 
-type PageProps = {
-  params: {
-    slug: string;
-  };
-};
+export default async function EbookPage({ params }) {
+  const supabase = createServerComponentClient({ cookies });
 
-export default async function EbookPage({ params }: PageProps) {
-  const supabase = createServerComponentClient({ cookies: () => cookies() });
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return redirect('/login');
+    redirect('/login');
   }
 
   const { data: profile } = await supabase
@@ -29,7 +24,7 @@ export default async function EbookPage({ params }: PageProps) {
     .single();
 
   if (!profile?.has_active_subscription) {
-    return redirect('/pricing');
+    redirect('/pricing');
   }
 
   const { slug } = params;
