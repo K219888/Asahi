@@ -4,7 +4,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-// ✅ Define the correct props type
+export const dynamic = 'force-dynamic'; // ✅ required for SSR + Supabase
+
 type PageProps = {
   params: {
     slug: string;
