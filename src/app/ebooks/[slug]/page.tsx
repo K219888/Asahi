@@ -4,7 +4,14 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-export default async function EbookPage({ params }: { params: { slug: string } }) {
+// ✅ Define the correct props type
+type PageProps = {
+  params: {
+    slug: string;
+  };
+};
+
+export default async function EbookPage({ params }: PageProps) {
   const supabase = createServerComponentClient({ cookies: () => cookies() });
   const {
     data: { user },
