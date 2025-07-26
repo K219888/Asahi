@@ -1,5 +1,5 @@
 // app/ebooks/[slug]/page.js
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -7,7 +7,19 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function EbookPage({ params }) {
-  const supabase = createServerComponentClient({ cookies });
+  const cookieStore = cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        get(name) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
 
   const {
     data: { user },
@@ -52,7 +64,9 @@ export default async function EbookPage({ params }) {
         ← Back to E-Books
       </Link>
       <h1 className="text-3xl font-bold mt-4">{ebook.title}</h1>
-      {ebook.author && <p className="text-gray-600 italic mb-6">by {ebook.author}</p>}
+      {ebook.author && (
+        <p className="text-gray-600 italic mb-6">by {ebook.author}</p>
+      )}
       <div
         className="prose max-w-none"
         dangerouslySetInnerHTML={{ __html: ebook.content }}
