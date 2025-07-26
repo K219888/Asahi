@@ -13,6 +13,8 @@ export async function middleware(req) {
 
   // Protect /ebooks/[slug] route
   if (pathname.startsWith('/ebooks/')) {
+  console.log("Middleware user:", user);
+
     if (!user) {
       return NextResponse.redirect(new URL('/login', req.url));
     }
@@ -22,6 +24,8 @@ export async function middleware(req) {
       .select('has_active_subscription')
       .eq('id', user.id)
       .single();
+
+     console.log("Middleware profile:", profile);
 
     if (!profile?.has_active_subscription) {
       return NextResponse.redirect(new URL('/pricing', req.url));
@@ -34,4 +38,4 @@ export async function middleware(req) {
 // This tells middleware to only run on /ebooks/*
 export const config = {
   matcher: ['/ebooks/:path*'],
-};
+}; 
