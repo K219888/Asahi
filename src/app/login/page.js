@@ -5,16 +5,16 @@ import { useState } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 import Link from "next/link";
 
+const supabase = createBrowserClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -30,17 +30,12 @@ export default function LoginPage() {
       return;
     }
 
-    const user = data.user;
+    const { user } = data;
 
     if (!user?.email_confirmed_at) {
       setError("Please verify your email before logging in.");
       await supabase.auth.signOut();
       return;
-    }
-
-    // ✅ Persist session so middleware sees you as logged in
-    if (data.session) {
-      await supabase.auth.setSession(data.session);
     }
 
     router.push("/chat");
