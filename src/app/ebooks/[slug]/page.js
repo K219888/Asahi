@@ -31,7 +31,7 @@ export default async function EbookPage({ params }) {
 
   const { data: ebook, error } = await supabase
     .from('ebooks')
-    .select('*')
+    .select('title, author, content')
     .eq('slug', slug)
     .single();
 
@@ -52,10 +52,11 @@ export default async function EbookPage({ params }) {
         ← Back to E-Books
       </Link>
       <h1 className="text-3xl font-bold mt-4">{ebook.title}</h1>
-      <p className="text-gray-600 italic mb-6">by {ebook.author}</p>
-      <div className="prose max-w-none">
-        <p>{ebook.content}</p>
-      </div>
+      {ebook.author && <p className="text-gray-600 italic mb-6">by {ebook.author}</p>}
+      <div
+        className="prose max-w-none"
+        dangerouslySetInnerHTML={{ __html: ebook.content }}
+      />
     </div>
   );
 }

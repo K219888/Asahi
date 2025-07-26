@@ -1,41 +1,46 @@
-import { NextResponse } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export async function middleware(req) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY // ✅ Service role key ignores RLS
+  );
+
+  // You still need the user session from Supabase helper
+  // or however you track your session (cookie, JWT, etc.)
+  const accessToken = req.cookies.get("sb-access-token")?.value; // Example name
+  let user = null;
+
+  if (accessToken) {
+    // Validate token and get user
+    const { data, error } = await supabaseAdmin.auth.getUser(accessToken);
+    if (!error) user = data.user;
+  }
 
   const pathname = req.nextUrl.pathname;
 
-  // Protect /ebooks/[slug] route
-  if (pathname.startsWith('/ebooks/')) {
-  console.log("Middleware user:", user);
-
+  if (pathname.startsWith("/ebooks")) {
     if (!user) {
-      return NextResponse.redirect(new URL('/login', req.url));
+      return NextResponse.redirect(new URL("/login", req.url));
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('has_active_subscription')
-      .eq('id', user.id)
+    const { data: profile, error } = await supabaseAdmin
+      .from("profiles")
+      .select("has_active_subscription")
+      .eq("id", user.id)
       .single();
 
-     console.log("Middleware profile:", profile);
-
-    if (!profile?.has_active_subscription) {
-      return NextResponse.redirect(new URL('/pricing', req.url));
+    if (error || !profile?.has_active_subscription) {
+      return NextResponse.redirect(new URL("/pricing", req.url));
     }
   }
 
   return res;
 }
 
-// This tells middleware to only run on /ebooks/*
 export const config = {
-  matcher: ['/ebooks/:path*'],
-}; 
+  matcher: ["/ebooks/:path*"],
+};

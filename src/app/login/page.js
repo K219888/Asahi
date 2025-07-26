@@ -15,6 +15,8 @@ export default function LoginPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_URL !== "your_supabase_project_url_here";
 
+  console.log("DEBUG:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+
   async function handleLogin(e) {
   e.preventDefault();
   setError("");
