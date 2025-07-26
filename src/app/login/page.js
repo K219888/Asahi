@@ -30,8 +30,18 @@ export default function LoginPage() {
       return;
     }
 
-    // ✅ Make sure we persist session cookies for middleware
-    await supabase.auth.setSession(data.session);
+    const user = data.user;
+
+    if (!user?.email_confirmed_at) {
+      setError("Please verify your email before logging in.");
+      await supabase.auth.signOut();
+      return;
+    }
+
+    // ✅ Persist session so middleware sees you as logged in
+    if (data.session) {
+      await supabase.auth.setSession(data.session);
+    }
 
     router.push("/chat");
   }
@@ -66,7 +76,17 @@ export default function LoginPage() {
         </button>
       </form>
 
-      <Link href="/signup" className="block text-center mt-4 text-blue-600">
+      <Link
+        href="/reset-password-request"
+        className="inline-block w-full text-center bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition"
+      >
+        Forgot your password?
+      </Link>
+
+      <Link
+        href="/signup"
+        className="inline-block w-full text-center bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition"
+      >
         Sign Up
       </Link>
     </div>
